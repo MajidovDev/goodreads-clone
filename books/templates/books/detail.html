@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block title %}Book Detail{% endblock title %}
+
+{% block content %}
+  <h3 class="text-center mb-3">Book Info</h3>
+  <hr>
+    <div class="row mb-3">
+      <h3 class="mb-3">{{ book.title }}
+        <span>
+          <i class="text-primary">by</i>
+          {% for book_author in book.bookauthor_set.all %}
+            {% if forloop.last %}
+            <i>{{ book_author.author.fullname }}</i>
+            {% else %}
+            <i>{{ book_author.author.fullname }},</i>
+            {% endif %}
+          {% endfor %}
+        </span>
+      </h3>
+      <div class="col-2">
+          <img style="width:200px; height:300px;" class="rounded-3" src="{{ book.cover_picture.url }}">
+          <!-- Button trigger modal -->
+          <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#addReviewModal">
+            Add Review
+          </button>
+      </div>
+      <div class="col-6">
+          <p>{{ book.description }}</p>
+      </div>
+    </div>
+
+    {% if book.bookreview_set.exists %}
+      <h3 class="text-center" >Reviews</h3> <hr>
+
+      <div class="row d-flex">
+        {% for review in book.bookreview_set.all %}
+        <div class="col-6">
+          <hr>
+          <div class="row">
+            <div class="col-2">
+              <img style="width: 80px; height:80px " class="rounded-3" src="{{ review.user.profile_picture.url }}" alt="profile pic.">
+            </div>
+            <div class="col-8">
+              <div class="d-flex justify-content-between">
+                <div>
+                  <p class="fs-3 mb-0">{{ review.user.username }} <span class="text-secondary fs-6">{{ review.created_at }}</span></p>
+                  <p class="text-secondary fs-5">{{ review.starts_given }} stars given
+                    {% if review.user == request.user %}
+                    <span class="text-end">
+                      <a href="{% url 'books:edit-review' book.id review.id %}"><i class="bi bi-pen"></i></a>|<a href="{% url 'books:confirm-delete-review' book.id review.id %}"><i class="bi bi-trash"></i></a>
+                    </span>
+                    {% endif %}
+                  </p>
+
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="fs-5 fst-italic"> - {{ review.comment }}</p>
+        </div>
+      {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- Modal -->
+    <div class="modal fade" id="addReviewModal" tabindex="-1" aria-labelledby="addReviewModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addReviewModalLabel">Review Form</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form method="post" action="{% url 'books:reviews' book.id %}">
+              {% csrf_token %}
+              {{ review_form | crispy }}
+              <div class="modal-footer">
+<!--                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>-->
+                <button class="btn btn-primary">Post</button>
+              </div>
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </div>
+{% endblock content %}
